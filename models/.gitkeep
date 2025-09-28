@@ -1,0 +1,9 @@
+# This file ensures the models directory is tracked by Git
+# 
+# This directory will contain:
+# - Trained model artifacts (.joblib, .h5, .pt files)
+# - Model metadata and configurations
+# - Lightweight model checkpoints for reproducibility
+#
+# Note: Large model files should be excluded via .gitignore
+# but this directory structure should be preserved

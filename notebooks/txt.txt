@@ -1,0 +1,11 @@
+\begin{tabular}{ll}
+\toprule
+review & sentiment \\
+\midrule
+One of the other reviewers has mentioned that after watching & positive \\
+A wonderful little production. <br /><br />The filming techn & positive \\
+I thought this was a wonderful way to spend time on a too ho & positive \\
+Basically there's a family where a little boy (Jake) thinks  & negative \\
+Petter Mattei's "Love in the Time of Money" is a visually st & positive \\
+\bottomrule
+\end{tabular}

@@ -33,12 +33,33 @@ def prepare_targets(df: pd.DataFrame, class_col=DEFAULT_CLASS_COL, reg_col=DEFAU
         df[reg_col] = pd.NA
     return df
 
+import re
+import string
+
+def clean_text(text):
+    # Lowercase the text
+    text = text.lower()
+    # Remove HTML tags
+    text = re.sub(r'<.*?>', '', text)
+    # Remove punctuation
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
 def minimal_cleaning(df: pd.DataFrame):
     # Basic cleaning — drop rows with empty reviews
     text_col = "review" if "review" in df.columns else df.columns[0]
     df = df.dropna(subset=[text_col]).reset_index(drop=True)
+    
+    # Apply notebook cleaning logic
+    print("Applying text cleaning...")
+    df[text_col] = df[text_col].apply(clean_text)
+    
     # Remove duplicates
+    before_dedup = len(df)
     df = df.drop_duplicates(subset=[text_col]).reset_index(drop=True)
+    print(f"Dropped {before_dedup - len(df)} duplicates.")
     return df
 
 def split_and_save(df: pd.DataFrame, out_dir: str, test_size=0.2, val_size=0.1, random_state=42):

@@ -105,6 +105,10 @@ def main():
         os.makedirs("models", exist_ok=True)
         joblib.dump(pipeline, "models/classification_logreg.joblib")
         print("Model saved to models/classification_logreg.joblib")
+        
+        # Save vectorizer separately for evaluate.py
+        joblib.dump(pipeline.named_steps['tfidf'], "models/tfidf_vectorizer.joblib")
+        print("Vectorizer saved to models/tfidf_vectorizer.joblib")
 
 if __name__ == "__main__":
     main()

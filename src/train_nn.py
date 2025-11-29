@@ -93,50 +93,29 @@ def main():
         mlflow.log_metric("test_accuracy", accuracy)
         mlflow.sklearn.log_model(pipeline_basic, "model_basic")
 
-    # 2. Random Search
-    print("\n--- 2. Running Random Search ---")
-    with mlflow.start_run(run_name="MLP_RandomSearch"):
-        pipeline_search = Pipeline([
+    # 2. Train Best Model (MLP)
+    print("\n--- 2. Training Best Model (MLP) ---")
+    with mlflow.start_run(run_name="MLP_Best"):
+        # Best parameters found from notebook/experiments
+        # hidden_layer_sizes=(64,), alpha=0.0001
+        
+        pipeline_best = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=5000)),
             ('clf', MLPClassifier(
-                max_iter=1000, 
-                random_state=RANDOM_STATE, 
-                early_stopping=True
+                hidden_layer_sizes=(64,),
+                learning_rate_init=0.001,
+                alpha=0.0001,
+                max_iter=1000,
+                random_state=RANDOM_STATE,
+                early_stopping=True,
+                verbose=True
             ))
         ])
         
-        param_dist = {
-            'clf__hidden_layer_sizes': [(64,), (128,), (64, 32)],
-            'clf__alpha': [0.0001, 0.001],
-        }
+        print("Training model...")
+        pipeline_best.fit(X_train, y_train)
         
-        random_search = RandomizedSearchCV(
-            pipeline_search, 
-            param_distributions=param_dist, 
-            n_iter=6, 
-            cv=3, 
-            scoring='f1_macro', 
-            n_jobs=-1, 
-            verbose=1,
-            random_state=RANDOM_STATE
-        )
-        
-        print("Starting Hyperparameter Tuning...")
-        random_search.fit(X_train, y_train)
-        
-        print("\nBest Parameters Found:")
-        print(random_search.best_params_)
-        print(f"Best Cross-Validation F1 Score: {random_search.best_score_:.4f}")
-        
-        mlflow.log_params(random_search.best_params_)
-        mlflow.log_metric("best_cv_f1_score", random_search.best_score_)
-        
-        best_model = random_search.best_estimator_
-
-    # 3. Best Model Evaluation
-    print("\n--- 3. Evaluating Best Model ---")
-    with mlflow.start_run(run_name="MLP_Best"):
-        y_pred_best = best_model.predict(X_test)
+        y_pred_best = pipeline_best.predict(X_test)
         accuracy_best = accuracy_score(y_test, y_pred_best)
         report_best = classification_report(y_test, y_pred_best)
         
@@ -144,14 +123,15 @@ def main():
         print("Classification Report:\n", report_best)
         
         mlflow.log_param("model_type", "MLP_Best")
-        mlflow.log_params(random_search.best_params_)
+        mlflow.log_param("hidden_layer_sizes", "(64,)")
+        mlflow.log_param("alpha", 0.0001)
         mlflow.log_metric("test_accuracy", accuracy_best)
         
-        mlflow.sklearn.log_model(best_model, "model_best")
+        mlflow.sklearn.log_model(pipeline_best, "model_best")
         
         # Save locally
         os.makedirs("models", exist_ok=True)
-        joblib.dump(best_model, "models/mlp_best.pkl")
+        joblib.dump(pipeline_best, "models/mlp_best.pkl")
         print("Best model saved to models/mlp_best.pkl")
 
 if __name__ == "__main__":

@@ -103,8 +103,8 @@ def main():
         
         # Save locally
         os.makedirs("models", exist_ok=True)
-        joblib.dump(pipeline, "models/lr_baseline.pkl")
-        print("Model saved to models/lr_baseline.pkl")
+        joblib.dump(pipeline, "models/classification_logreg.joblib")
+        print("Model saved to models/classification_logreg.joblib")
 
 if __name__ == "__main__":
     main()

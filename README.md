@@ -6,14 +6,14 @@ This project performs sentiment analysis on the IMDb Movie Reviews dataset using
 
 1.  **Clone the Repository**:
     ```bash
-    git clone <repository_url>
+    git clone https://github.com/HashemBader/ML-Text-Sentiment.git
     cd ML-Text-Sentiment
     ```
 
 2.  **Create and Activate Virtual Environment**:
     ```bash
     # Create virtual environment
-    python -m venv venv
+    python3 -m venv venv
 
     # Activate virtual environment
     # On Windows:
@@ -33,7 +33,7 @@ This project performs sentiment analysis on the IMDb Movie Reviews dataset using
 The dataset is expected to be in `data/imdb_dataset.csv`. If you don't have the processed data yet, run the data processing script:
 
 ```bash
-python src/data.py --input_csv data/imdb_dataset.csv --out_dir data/processed
+python3 src/data.py --input_csv data/imdb_dataset.csv --out_dir data/processed
 ```
 
 This will clean the text and split the data into `train.csv`, `val.csv`, and `test.csv` in `data/processed/`.
@@ -45,7 +45,7 @@ This will clean the text and split the data into `train.csv`, `val.csv`, and `te
 To train the baseline Logistic Regression model and save it for evaluation:
 
 ```bash
-python src/train_baselines.py
+python3 src/train_baselines.py
 ```
 
 This script:
@@ -59,7 +59,7 @@ This script:
 To train the MLP Classifier:
 
 ```bash
-python src/train_nn.py
+python3 src/train_nn.py
 ```
 
 This script:
@@ -73,7 +73,7 @@ This script:
 To generate evaluation reports and plots (Confusion Matrix, Target Distribution, etc.):
 
 ```bash
-python src/evaluate.py --data_dir data/processed --models_dir models --output_dir reports
+python3 src/evaluate.py --data_dir data/processed --models_dir models --output_dir reports
 ```
 
 The generated plots will be saved in the `reports/` directory:

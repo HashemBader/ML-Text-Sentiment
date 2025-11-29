@@ -65,7 +65,7 @@ python3 src/train_nn.py
 This script:
 - Trains the best MLP model using optimized hyperparameters.
 - Logs results to MLflow.
-- Saves the best model to `models/mlp_best.pkl`.
+- Saves the best model to `models/mlp_best.joblib`.
 
 ## Evaluation
 

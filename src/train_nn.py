@@ -131,8 +131,8 @@ def main():
         
         # Save locally
         os.makedirs("models", exist_ok=True)
-        joblib.dump(pipeline_best, "models/mlp_best.pkl")
-        print("Best model saved to models/mlp_best.pkl")
+        joblib.dump(pipeline_best, "models/mlp_best.joblib")
+        print("Best model saved to models/mlp_best.joblib")
 
 if __name__ == "__main__":
     main()

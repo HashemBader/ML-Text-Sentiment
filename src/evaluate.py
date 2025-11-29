@@ -15,7 +15,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from train_baselines import eval_classif, eval_reg
+
 from features import load_vectorizer, transform_csv
 from utils import ensure_dir
 

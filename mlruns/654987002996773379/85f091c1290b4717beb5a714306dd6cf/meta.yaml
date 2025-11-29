@@ -1,0 +1,15 @@
+artifact_uri: file://C:\Users\User\Desktop\ML-Text-Sentiment\mlruns/654987002996773379/85f091c1290b4717beb5a714306dd6cf/artifacts
+end_time: 1764458731342
+entry_point_name: ''
+experiment_id: '654987002996773379'
+lifecycle_stage: active
+run_id: 85f091c1290b4717beb5a714306dd6cf
+run_name: MLP_Best
+run_uuid: 85f091c1290b4717beb5a714306dd6cf
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764458724531
+status: 3
+tags: []
+user_id: User

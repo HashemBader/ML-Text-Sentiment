@@ -1,0 +1,15 @@
+artifact_uri: file://C:\Users\User\Desktop\ML-Text-Sentiment\mlruns/596396934259330690/079d0519eed744f6afe45a3c22143394/artifacts
+end_time: 1764451276358
+entry_point_name: ''
+experiment_id: '596396934259330690'
+lifecycle_stage: active
+run_id: 079d0519eed744f6afe45a3c22143394
+run_name: LogisticRegression_Pipeline
+run_uuid: 079d0519eed744f6afe45a3c22143394
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764451230900
+status: 3
+tags: []
+user_id: User

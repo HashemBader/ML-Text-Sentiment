@@ -88,6 +88,7 @@ def main():
         y_pred = pipeline.predict(X_test)
         test_accuracy = accuracy_score(y_test, y_pred)
         report = classification_report(y_test, y_pred)
+        report_dict = classification_report(y_test, y_pred, output_dict=True)
         
         print(f"Test Accuracy: {test_accuracy:.4f}")
         print("Classification Report:\n", report)
@@ -97,6 +98,14 @@ def main():
         mlflow.log_param("vectorizer", "TfidfVectorizer")
         mlflow.log_metric("mean_cv_accuracy", mean_cv_accuracy)
         mlflow.log_metric("test_accuracy", test_accuracy)
+        
+        # Log classification report metrics
+        mlflow.log_metric("precision_weighted", report_dict['weighted avg']['precision'])
+        mlflow.log_metric("recall_weighted", report_dict['weighted avg']['recall'])
+        mlflow.log_metric("f1_weighted", report_dict['weighted avg']['f1-score'])
+        
+        # Log full report as text artifact
+        mlflow.log_text(report, "classification_report.txt")
         
         # Log model
         mlflow.sklearn.log_model(pipeline, "model")

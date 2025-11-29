@@ -1,0 +1,3 @@
+[('tfidf', TfidfVectorizer()), ('clf', MLPClassifier(early_stopping=True, hidden_layer_sizes=(8,),
+              learning_rate_init=0.05, max_iter=2000, n_iter_no_change=20,
+              random_state=42))]

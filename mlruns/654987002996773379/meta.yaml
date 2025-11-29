@@ -1,0 +1,6 @@
+artifact_location: file://C:\Users\User\Desktop\ML-Text-Sentiment\mlruns/654987002996773379
+creation_time: 1764451292134
+experiment_id: '654987002996773379'
+last_update_time: 1764451292134
+lifecycle_stage: active
+name: IMDB_Sentiment_Analysis_NN

@@ -54,7 +54,7 @@ htmlcov/
 .env.*
 
 # MLflow runs, models and artifacts
-mlruns/
+
 models/
 
 # Model artifact extensions

@@ -68,39 +68,52 @@ def main():
     print("\n--- 1. Running Basic Model ---")
     with mlflow.start_run(run_name="MLP_Basic"):
         pipeline_basic = Pipeline([
-            ('tfidf', TfidfVectorizer(max_features=5000)),
+            ('tfidf', TfidfVectorizer()),
             ('clf', MLPClassifier(
-                hidden_layer_sizes=(64,),
-                learning_rate_init=0.001,
+                hidden_layer_sizes=(8,),
+                activation="relu",
+                solver="adam",
                 alpha=1e-4,
-                max_iter=1000,
+                learning_rate_init=0.05,
+                max_iter=2000,
                 random_state=RANDOM_STATE,
                 early_stopping=True,
-                verbose=True
+                shuffle=True,
+                n_iter_no_change=20
             ))
         ])
         
         pipeline_basic.fit(X_train, y_train)
-        
         y_pred = pipeline_basic.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
         report = classification_report(y_test, y_pred)
+        report_dict = classification_report(y_test, y_pred, output_dict=True)
         
         print(f"Basic Model Test Accuracy: {accuracy:.4f}")
         print("Classification Report:\n", report)
         
-        mlflow.log_param("model_type", "MLP_Basic")
+        mlflow.log_params(pipeline_basic.get_params())
         mlflow.log_metric("test_accuracy", accuracy)
+        
+        # Log classification report metrics
+        mlflow.log_metric("precision_weighted", report_dict['weighted avg']['precision'])
+        mlflow.log_metric("recall_weighted", report_dict['weighted avg']['recall'])
+        mlflow.log_metric("f1_weighted", report_dict['weighted avg']['f1-score'])
+        
+        # Log full report as text artifact
+        mlflow.log_text(report, "classification_report.txt")
         mlflow.sklearn.log_model(pipeline_basic, "model_basic")
 
     # 2. Random Search
     print("\n--- 2. Running Random Search ---")
     with mlflow.start_run(run_name="MLP_RandomSearch"):
         pipeline_search = Pipeline([
-            ('tfidf', TfidfVectorizer(max_features=5000)),
+            ('tfidf', TfidfVectorizer()),
             ('clf', MLPClassifier(
                 max_iter=1000, 
                 random_state=RANDOM_STATE, 
+                activation='relu',
+                solver='adam',
                 early_stopping=True
             ))
         ])
@@ -139,13 +152,21 @@ def main():
         y_pred_best = best_model.predict(X_test)
         accuracy_best = accuracy_score(y_test, y_pred_best)
         report_best = classification_report(y_test, y_pred_best)
+        report_best_dict = classification_report(y_test, y_pred_best, output_dict=True)
         
         print(f"Best Model Test Accuracy: {accuracy_best:.4f}")
         print("Classification Report:\n", report_best)
         
-        mlflow.log_param("model_type", "MLP_Best")
-        mlflow.log_params(random_search.best_params_)
+        mlflow.log_params(best_model.get_params())
         mlflow.log_metric("test_accuracy", accuracy_best)
+        
+        # Log classification report metrics
+        mlflow.log_metric("precision_weighted", report_best_dict['weighted avg']['precision'])
+        mlflow.log_metric("recall_weighted", report_best_dict['weighted avg']['recall'])
+        mlflow.log_metric("f1_weighted", report_best_dict['weighted avg']['f1-score'])
+        
+        # Log full report as text artifact
+        mlflow.log_text(report_best, "classification_report.txt")
         
         mlflow.sklearn.log_model(best_model, "model_best")
         

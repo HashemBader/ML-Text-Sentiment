@@ -1,132 +1,151 @@
-"""
-evaluate.py
-- Loads models and test set, generates required plots:
-  * Target distribution (bar plot of class counts)
-  * Correlation heatmap (for numeric columns) OR boxplot for key numeric features
-  * Confusion matrix for best classification baseline
-  * Residuals vs predicted (or residual histogram) for best regression baseline
-- Saves tables with metrics (CSV) for grading rubric
-"""
 import argparse
 import os
 import joblib
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
 
-from features import load_vectorizer, transform_csv
-from utils import ensure_dir
+# Constants
+MODELS_DIR = "models"
+DATA_DIR = "data/processed"
+REPORTS_DIR = "reports"
+TEST_DATA_PATH = os.path.join(DATA_DIR, "test.csv")
 
-def plot_target_distribution(df, class_col="sentiment", out_path="reports/target_distribution.png"):
-    ensure_dir(os.path.dirname(out_path))
-    counts = df[class_col].value_counts()
-    plt.figure(figsize=(6,4))
-    sns.barplot(x=counts.index, y=counts.values)
-    plt.xlabel(class_col)
-    plt.ylabel("Count")
-    plt.title("Target distribution")
+def ensure_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+def load_model(filename):
+    path = os.path.join(MODELS_DIR, filename)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Model file not found: {path}")
+    return joblib.load(path)
+
+def load_test_data():
+    if not os.path.exists(TEST_DATA_PATH):
+        raise FileNotFoundError(f"Test data not found: {TEST_DATA_PATH}")
+    df = pd.read_csv(TEST_DATA_PATH)
+    # Drop NaNs if any
+    df = df.dropna(subset=['review', 'sentiment'])
+    return df['review'], df['sentiment']
+
+def plot_learning_curve(mlp_pipeline, out_path):
+    """Plots the loss curve from the MLP classifier."""
+    mlp_model = mlp_pipeline.named_steps['clf']
+    
+    if not hasattr(mlp_model, 'loss_curve_'):
+        print("Warning: MLP model does not have loss_curve_ attribute. Skipping learning curve plot.")
+        return
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(mlp_model.loss_curve_, label='Training Loss')
+    plt.title("Neural Network Learning Curve")
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid(True)
     plt.tight_layout()
     plt.savefig(out_path)
     plt.close()
-    print("Saved", out_path)
+    print(f"Saved learning curve to {out_path}")
 
-def plot_correlation_or_box(df, numeric_cols=None, out_path="reports/corr_heatmap.png"):
-    ensure_dir(os.path.dirname(out_path))
-    if numeric_cols is None:
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    if len(numeric_cols) >= 2:
-        corr = df[numeric_cols].corr()
-        plt.figure(figsize=(8,6))
-        sns.heatmap(corr, annot=True, fmt=".2f", cmap="vlag")
-        plt.title("Correlation heatmap")
-        plt.tight_layout()
-        plt.savefig(out_path)
-        plt.close()
-        print("Saved", out_path)
-    else:
-        # fallback: boxplot of numeric cols if only one numeric
-        if numeric_cols:
-            plt.figure(figsize=(6,4))
-            sns.boxplot(x=df[numeric_cols[0]])
-            plt.title(f"Boxplot: {numeric_cols[0]}")
-            plt.tight_layout()
-            plt.savefig(out_path)
-            plt.close()
-            print("Saved", out_path)
-
-def plot_confusion_matrix(model, X_test, y_test, labels=None, out_path="reports/confusion_matrix.png"):
-    ensure_dir(os.path.dirname(out_path))
-    preds = model.predict(X_test)
-    cm = confusion_matrix(y_test, preds, labels=labels)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-    disp.plot(cmap="Blues")
-    plt.title("Confusion Matrix")
+def plot_confusion_matrix_nn(model, X_test, y_test, out_path):
+    """Plots confusion matrix for the Neural Network."""
+    y_pred = model.predict(X_test)
+    cm = confusion_matrix(y_test, y_pred, labels=model.classes_)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+    
+    plt.figure(figsize=(8, 6))
+    disp.plot(cmap="Blues", values_format='d')
+    plt.title("Neural Network Confusion Matrix")
     plt.tight_layout()
     plt.savefig(out_path)
     plt.close()
-    print("Saved", out_path)
+    print(f"Saved confusion matrix to {out_path}")
 
-def plot_residuals(model, X_test, y_test, out_path="reports/residuals.png"):
-    ensure_dir(os.path.dirname(out_path))
-    preds = model.predict(X_test)
-    residuals = y_test - preds
-    plt.figure(figsize=(6,4))
-    sns.histplot(residuals, kde=True)
-    plt.title("Residuals histogram")
+def plot_feature_importance(logreg_pipeline, out_path, top_n=20):
+    """Plots top N positive and negative features from Logistic Regression."""
+    vectorizer = logreg_pipeline.named_steps['tfidf']
+    clf = logreg_pipeline.named_steps['clf']
+    
+    feature_names = vectorizer.get_feature_names_out()
+    coefs = clf.coef_[0]
+    
+    # Create a dataframe of features and coefficients
+    feature_importance = pd.DataFrame({'feature': feature_names, 'coefficient': coefs})
+    feature_importance = feature_importance.sort_values(by='coefficient', ascending=False)
+    
+    # Get top N positive and negative
+    top_pos = feature_importance.head(top_n)
+    top_neg = feature_importance.tail(top_n)
+    
+    # Combine for plotting
+    top_features = pd.concat([top_pos, top_neg])
+    
+    plt.figure(figsize=(10, 8))
+    colors = ['green' if c > 0 else 'red' for c in top_features['coefficient']]
+    sns.barplot(x='coefficient', y='feature', data=top_features, palette=colors)
+    plt.title(f"Top {top_n} Positive and Negative Features (Logistic Regression)")
+    plt.xlabel("Coefficient Value")
+    plt.ylabel("Feature")
     plt.tight_layout()
     plt.savefig(out_path)
     plt.close()
-    print("Saved", out_path)
+    print(f"Saved feature importance plot to {out_path}")
 
-def load_best_model(models_dir, task="classification"):
-    # Simple heuristic: pick model file with highest val_f1 from MLflow artifacts is ideal,
-    # but as a simple approach, load logistic / linear if available
-    if task == "classification":
-        candidates = ["models/classification_logreg.joblib", "models/classification_mnb.joblib", "models/classification_dt.joblib"]
-    else:
-        candidates = ["models/regression_linear.joblib", "models/regression_dt_reg.joblib"]
-    for c in candidates:
-        if os.path.exists(c):
-            return joblib.load(c), c
-    raise FileNotFoundError("No model found in models_dir")
+def evaluate_model(model, X_test, y_test, model_name):
+    """Calculates metrics for a model."""
+    y_pred = model.predict(X_test)
+    return {
+        "Model": model_name,
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred, average='weighted', zero_division=0),
+        "Recall": recall_score(y_test, y_pred, average='weighted', zero_division=0),
+        "F1 Score": f1_score(y_test, y_pred, average='weighted', zero_division=0)
+    }
 
-def main(args):
-    ensure_dir(args.output_dir)
-    vect = load_vectorizer(args.vectorizer_path)
-    X_test, df_test = transform_csv(f"{args.data_dir}/test.csv", args.vectorizer_path, text_col=args.text_col)
-    # Plot 1: target distribution
-    plot_target_distribution(df_test, class_col=args.class_col, out_path=f"{args.output_dir}/target_distribution.png")
-    # Plot 2: correlation heatmap or boxplot for numeric features
-    plot_correlation_or_box(df_test, numeric_cols=args.numeric_cols, out_path=f"{args.output_dir}/corr_heatmap_or_box.png")
-    # Plot 3: Confusion matrix for best classification baseline
+def main():
+    ensure_dir(REPORTS_DIR)
+    
+    print("Loading data...")
+    X_test, y_test = load_test_data()
+    
+    print("Loading models...")
     try:
-        clf_model, clf_path = load_best_model(args.models_dir, task="classification")
-        plot_confusion_matrix(clf_model, X_test, df_test[args.class_col].astype(str).tolist(), labels=["positive","negative"], out_path=f"{args.output_dir}/confusion_matrix.png")
-    except Exception as e:
-        print("Skipping confusion matrix:", e)
-    # Plot 4: Residuals for best regression baseline (if regression target exists)
-    if args.reg_col in df_test.columns and not df_test[args.reg_col].isna().all():
-        try:
-            reg_model, reg_path = load_best_model(args.models_dir, task="regression")
-            y_test_reg = df_test[args.reg_col].astype(float).to_numpy()
-            X_test_arr = X_test
-            plot_residuals(reg_model, X_test_arr, y_test_reg, out_path=f"{args.output_dir}/residuals.png")
-        except Exception as e:
-            print("Skipping residuals plot:", e)
-    # Save simple metrics table using MLflow logs if desired (here we create placeholder)
-    print("Evaluation completed. Reports saved to", args.output_dir)
+        logreg_pipeline = load_model("classification_logreg.joblib")
+        mlp_pipeline = load_model("mlp_best.joblib")
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        print("Please run train_baselines.py and train_nn.py first.")
+        return
+
+    # 1. NN Learning Curve
+    print("Generating NN Learning Curve...")
+    plot_learning_curve(mlp_pipeline, os.path.join(REPORTS_DIR, "nn_learning_curve.png"))
+    
+    # 2. NN Confusion Matrix
+    print("Generating NN Confusion Matrix...")
+    plot_confusion_matrix_nn(mlp_pipeline, X_test, y_test, os.path.join(REPORTS_DIR, "nn_confusion_matrix.png"))
+    
+    # 3. Feature Importance (LogReg)
+    print("Generating Feature Importance Plot...")
+    plot_feature_importance(logreg_pipeline, os.path.join(REPORTS_DIR, "feature_importance.png"))
+    
+    # 4. Model Comparison Table
+    print("Generating Model Comparison Table...")
+    metrics = []
+    metrics.append(evaluate_model(logreg_pipeline, X_test, y_test, "Logistic Regression"))
+    metrics.append(evaluate_model(mlp_pipeline, X_test, y_test, "Neural Network"))
+    
+    df_metrics = pd.DataFrame(metrics)
+    print("\nModel Comparison:")
+    print(df_metrics)
+    
+    csv_path = os.path.join(REPORTS_DIR, "model_comparison.csv")
+    df_metrics.to_csv(csv_path, index=False)
+    print(f"Saved comparison table to {csv_path}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", type=str, default="data/processed")
-    parser.add_argument("--vectorizer_path", type=str, default="models/tfidf_vectorizer.joblib")
-    parser.add_argument("--models_dir", type=str, default="models")
-    parser.add_argument("--output_dir", type=str, default="reports")
-    parser.add_argument("--text_col", type=str, default="review")
-    parser.add_argument("--class_col", type=str, default="sentiment")
-    parser.add_argument("--reg_col", type=str, default="rating")
-    parser.add_argument("--numeric_cols", nargs="*", default=None)
-    args = parser.parse_args()
-    main(args)
+    main()

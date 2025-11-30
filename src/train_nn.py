@@ -83,7 +83,7 @@ def main():
         print("Training model with custom loop for 12 iterations...")
         
         # Split X_train into train and validation for loss monitoring
-        X_t, X_v, y_t, y_v = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_STATE, stratify=y_train)
+        X_t, X_v, y_t, y_v = train_test_split(X_train, y_train, test_size=0.3, random_state=RANDOM_STATE, stratify=y_train)
         
         # Fit vectorizer on training part
         tfidf = TfidfVectorizer(max_features=5000)

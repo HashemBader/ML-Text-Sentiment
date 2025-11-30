@@ -93,7 +93,7 @@ def main():
         # Initialize MLP
         mlp = MLPClassifier(
             hidden_layer_sizes=(64,),
-            learning_rate_init=0.0001,
+            learning_rate_init=0.0005,
             alpha=0.0001,
             random_state=RANDOM_STATE,
             verbose=False, # We will print our own progress

@@ -93,7 +93,7 @@ def main():
         # Initialize MLP
         mlp = MLPClassifier(
             hidden_layer_sizes=(64,),
-            learning_rate_init=0.0005,
+            learning_rate_init=0.0002,
             alpha=0.0001,
             random_state=RANDOM_STATE,
             verbose=False, # We will print our own progress
@@ -109,7 +109,7 @@ def main():
         
         from sklearn.metrics import log_loss
         
-        for i in range(100):
+        for i in range(20):
             mlp.partial_fit(X_t_vec, y_t, classes=classes)
             
             # Calculate losses

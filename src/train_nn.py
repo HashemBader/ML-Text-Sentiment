@@ -93,10 +93,15 @@ def main():
         # Initialize MLP
         mlp = MLPClassifier(
             hidden_layer_sizes=(64,),
-            learning_rate_init=0.001,
+            learning_rate_init=0.0001,
             alpha=0.0001,
             random_state=RANDOM_STATE,
             verbose=False # We will print our own progress
+            early_stopping=True,
+            max_iter=1000,
+            solver="adam",
+            activation="relu",
+
         )
         
         classes = np.unique(y_train)

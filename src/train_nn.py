@@ -80,7 +80,7 @@ def main():
         # hidden_layer_sizes=(64,), alpha=0.0001
         
         # Custom training loop to capture validation loss
-        print("Training model with custom loop for 12 iterations...")
+        print("Training model with custom loop for 30 iterations...")
         
         # Split X_train into train and validation for loss monitoring
         X_t, X_v, y_t, y_v = train_test_split(X_train, y_train, test_size=0.3, random_state=RANDOM_STATE, stratify=y_train)
@@ -109,7 +109,7 @@ def main():
         
         from sklearn.metrics import log_loss
         
-        for i in range(20):
+        for i in range(30):
             mlp.partial_fit(X_t_vec, y_t, classes=classes)
             
             # Calculate losses
@@ -122,7 +122,7 @@ def main():
             train_losses.append(tl)
             val_losses.append(vl)
             
-            print(f"Iteration {i+1}/100 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
+            print(f"Iteration {i+1}/30 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
             
         # Attach custom loss history to the model
         mlp.custom_train_loss_ = train_losses

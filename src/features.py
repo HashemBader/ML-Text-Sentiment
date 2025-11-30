@@ -16,7 +16,6 @@ def fit_vectorizer(train_csv_path, save_path, text_col="review", max_features=50
     """
     ensure_dir(os.path.dirname(save_path))
     df = pd.read_csv(train_csv_path)
-    # Fill NaN with empty string just in case
     texts = df[text_col].fillna("").astype(str).tolist()
     
     vectorizer = TfidfVectorizer(max_features=max_features, stop_words="english", ngram_range=(1, 2))

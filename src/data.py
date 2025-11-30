@@ -13,19 +13,12 @@ RANDOM_STATE = 42
 
 def clean_text(text):
     """
-    Cleans the text as per the notebook logic:
-    1. Lowercase
-    2. Remove HTML tags
-    3. Remove punctuation
-    4. Remove extra whitespace
+    Cleans the input text by performing lowercasing, HTML removal,
+    punctuation removal, and whitespace normalization.
     """
-    # Lowercase the text
     text = text.lower()
-    # Remove HTML tags
     text = re.sub(r'<.*?>', '', text)
-    # Remove punctuation
     text = text.translate(str.maketrans('', '', string.punctuation))
-    # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
@@ -47,12 +40,10 @@ def main():
     df = pd.read_csv(args.input_csv)
     print(f"Original shape: {df.shape}")
 
-    # 1. Drop duplicates (as per notebook)
     print("Dropping duplicates...")
     df = df.drop_duplicates()
     print(f"Shape after dropping duplicates: {df.shape}")
 
-    # 2. Clean text (as per notebook)
     print("Cleaning text...")
     if 'review' in df.columns:
         df['review'] = df['review'].apply(clean_text)
@@ -60,26 +51,16 @@ def main():
         print("Error: 'review' column not found.")
         return
 
-    # Save cleaned full dataset (as per notebook)
     print(f"Saving cleaned dataset to {CLEANED_DATA_PATH}...")
     df.to_csv(CLEANED_DATA_PATH, index=False)
 
-    # 3. Split into Train/Val/Test (for evaluate.py support)
-    # Notebook uses 70/30 split usually, but we need train/val/test for robust pipeline
-    # We will use a standard split or match what other scripts expect.
-    # train_nn.py expects to split data itself or load from processed.
-    # evaluate.py expects test.csv in data/processed.
-    
     print(f"Splitting and saving to {args.out_dir}...")
     ensure_dir(args.out_dir)
 
-    # Split into Train (70%), Test (30%) first
     train_df, test_df = train_test_split(
         df, test_size=0.3, random_state=RANDOM_STATE, stratify=df['sentiment']
     )
     
-
-    # Saving
     train_df.to_csv(os.path.join(args.out_dir, "train.csv"), index=False)
     test_df.to_csv(os.path.join(args.out_dir, "test.csv"), index=False)
     

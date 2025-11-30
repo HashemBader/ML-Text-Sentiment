@@ -38,7 +38,7 @@ def main():
     X = df['review']
     y = df['sentiment']
 
-    # Train-test split (70% train, 30% test to match notebook)
+    # Train-test split
     print("Splitting data...")
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=RANDOM_STATE, stratify=y
@@ -68,7 +68,7 @@ def main():
         
         print(f"Basic Model Test Accuracy: {accuracy:.4f}")
         print("Classification Report:\n", report)
-        
+
         # mlflow.log_param("model_type", "MLP_Basic")
         # mlflow.log_metric("test_accuracy", accuracy)
         # mlflow.sklearn.log_model(pipeline_basic, "model_basic")
@@ -80,15 +80,12 @@ def main():
         # --- 2a. Visualization Model (Custom Loop) ---
         print("Training visualization model with custom loop for 30 iterations...")
         
-        # Split X_train into train and validation for loss monitoring
         X_t, X_v, y_t, y_v = train_test_split(X_train, y_train, test_size=0.3, random_state=RANDOM_STATE, stratify=y_train)
         
-        # Fit vectorizer on training part
         tfidf_viz = TfidfVectorizer(max_features=5000)
         X_t_vec = tfidf_viz.fit_transform(X_t)
         X_v_vec = tfidf_viz.transform(X_v)
         
-        # Initialize MLP for Visualization
         mlp_viz = MLPClassifier(
             hidden_layer_sizes=(64,),
             learning_rate_init=0.0002,
@@ -130,8 +127,6 @@ def main():
         else:
             raise FileNotFoundError("models/model.pkl not found. Please ensure the model exists.")
             
-        # Attach custom loss history from visualization model to final model for plotting
-        # The pipeline might wrap the classifier, so we need to access the step
         if 'clf' in pipeline_final.named_steps:
             mlp_final = pipeline_final.named_steps['clf']
             mlp_final.custom_train_loss_ = train_losses
@@ -158,5 +153,4 @@ def main():
         print("Final Best model saved to models/mlp_best.joblib")
 
 if __name__ == "__main__":
-    
     main()

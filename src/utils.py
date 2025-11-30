@@ -12,7 +12,6 @@ def set_seed(seed: int = 42):
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
     except Exception:
-        # torch may not be installed at midpoint (no NN)
         pass
 
 def ensure_dir(path: str):

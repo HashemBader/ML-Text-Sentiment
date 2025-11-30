@@ -38,31 +38,27 @@ def main():
     X = df['review']
     y = df['sentiment']
 
-    # Train-test split (70% train, 30% test to match notebook)
+    # Train-test split
     print("Splitting data...")
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=RANDOM_STATE, stratify=y
     )
 
     with mlflow.start_run(run_name="LogisticRegression_Pipeline"):
-        # Create Pipeline
         pipeline = Pipeline([
             ('tfidf', TfidfVectorizer()),
             ('clf', LogisticRegression())
         ])
 
-        # Cross-validation
         print("Running Cross-Validation...")
         cv_scores = cross_val_score(pipeline, X_train, y_train, cv=5, scoring='accuracy')
         mean_cv_accuracy = np.mean(cv_scores)
         print(f"Cross-validation scores: {cv_scores}")
         print(f"Mean CV accuracy: {mean_cv_accuracy:.4f}")
 
-        # Train model
         print("Training model on full training set...")
         pipeline.fit(X_train, y_train)
 
-        # Evaluate on test set
         print("Evaluating on test set...")
         y_pred = pipeline.predict(X_test)
         test_accuracy = accuracy_score(y_test, y_pred)
@@ -71,21 +67,17 @@ def main():
         print(f"Test Accuracy: {test_accuracy:.4f}")
         print("Classification Report:\n", report)
 
-        # Log params and metrics
         mlflow.log_param("model_type", "LogisticRegression")
         mlflow.log_param("vectorizer", "TfidfVectorizer")
         mlflow.log_metric("mean_cv_accuracy", mean_cv_accuracy)
         mlflow.log_metric("test_accuracy", test_accuracy)
         
-        # Log model
         mlflow.sklearn.log_model(pipeline, "model")
         
-        # Save locally
         os.makedirs("models", exist_ok=True)
         joblib.dump(pipeline, "models/classification_logreg.joblib")
         print("Model saved to models/classification_logreg.joblib")
         
-        # Save vectorizer separately for evaluate.py
         joblib.dump(pipeline.named_steps['tfidf'], "models/tfidf_vectorizer.joblib")
         print("Vectorizer saved to models/tfidf_vectorizer.joblib")
 

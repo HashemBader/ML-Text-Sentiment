@@ -37,7 +37,6 @@ def plot_learning_curve(mlp_pipeline, out_path):
     
     plt.figure(figsize=(8, 6))
     
-    # Check for custom loss history first (from train_nn.py custom loop)
     if hasattr(mlp_model, 'custom_train_loss_'):
         plt.plot(mlp_model.custom_train_loss_, label='Training Loss', color='tab:blue')
         if hasattr(mlp_model, 'custom_val_loss_'):
@@ -48,7 +47,6 @@ def plot_learning_curve(mlp_pipeline, out_path):
         plt.legend()
         plt.grid(True)
         
-    # Fallback to standard sklearn attributes
     elif hasattr(mlp_model, 'loss_curve_'):
         fig, ax1 = plt.subplots(figsize=(8, 6))
         color = 'tab:blue'
@@ -103,15 +101,12 @@ def plot_feature_importance(logreg_pipeline, out_path, top_n=20):
     feature_names = vectorizer.get_feature_names_out()
     coefs = clf.coef_[0]
     
-    # Create a dataframe of features and coefficients
     feature_importance = pd.DataFrame({'feature': feature_names, 'coefficient': coefs})
     feature_importance = feature_importance.sort_values(by='coefficient', ascending=False)
     
-    # Get top N positive and negative
     top_pos = feature_importance.head(top_n)
     top_neg = feature_importance.tail(top_n)
     
-    # Combine for plotting
     top_features = pd.concat([top_pos, top_neg])
     
     plt.figure(figsize=(10, 8))
@@ -151,19 +146,15 @@ def main():
         print("Please run train_baselines.py and train_nn.py first.")
         return
 
-    # 1. NN Learning Curve
     print("Generating NN Learning Curve...")
     plot_learning_curve(mlp_pipeline, os.path.join(REPORTS_DIR, "nn_learning_curve.png"))
     
-    # 2. NN Confusion Matrix
     print("Generating NN Confusion Matrix...")
     plot_confusion_matrix_nn(mlp_pipeline, X_test, y_test, os.path.join(REPORTS_DIR, "nn_confusion_matrix.png"))
     
-    # 3. Feature Importance (LogReg)
     print("Generating Feature Importance Plot...")
     plot_feature_importance(logreg_pipeline, os.path.join(REPORTS_DIR, "feature_importance.png"))
     
-    # 4. Model Comparison Table
     print("Generating Model Comparison Table...")
     metrics = []
     metrics.append(evaluate_model(logreg_pipeline, X_test, y_test, "Logistic Regression"))

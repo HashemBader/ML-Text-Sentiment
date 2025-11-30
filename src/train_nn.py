@@ -97,7 +97,6 @@ def main():
             alpha=0.0001,
             random_state=RANDOM_STATE,
             verbose=False, # We will print our own progress
-            early_stopping=True,
             max_iter=1000,
             solver="adam",
             activation="relu"

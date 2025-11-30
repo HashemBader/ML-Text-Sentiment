@@ -78,12 +78,7 @@ def main():
         df, test_size=0.3, random_state=RANDOM_STATE, stratify=df['sentiment']
     )
     
-    # Further split Train into Train (85% of 70% ≈ 60% total) and Val (15% of 70% ≈ 10% total)
-    # Or just keep simple Train/Test if validation is done via CV in scripts.
-    # However, standard practice is to have a validation set saved.
-    # Let's do a simple Train/Test split save for now as scripts do their own CV/splitting mostly,
-    # but evaluate.py specifically needs test.csv.
-    
+
     # Saving
     train_df.to_csv(os.path.join(args.out_dir, "train.csv"), index=False)
     test_df.to_csv(os.path.join(args.out_dir, "test.csv"), index=False)

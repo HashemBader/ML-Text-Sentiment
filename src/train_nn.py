@@ -77,28 +77,27 @@ def main():
     print("\n--- 2. Training Model (MLP) and saving cv loss ---")
     with mlflow.start_run(run_name="MLP_Best"):
         
-        # Custom training loop to capture validation loss
-        print("Training model with custom loop for 30 iterations...")
+        # --- 2a. Visualization Model (Custom Loop) ---
+        print("Training visualization model with custom loop for 30 iterations...")
         
         # Split X_train into train and validation for loss monitoring
         X_t, X_v, y_t, y_v = train_test_split(X_train, y_train, test_size=0.3, random_state=RANDOM_STATE, stratify=y_train)
         
         # Fit vectorizer on training part
-        tfidf = TfidfVectorizer(max_features=5000)
-        X_t_vec = tfidf.fit_transform(X_t)
-        X_v_vec = tfidf.transform(X_v)
+        tfidf_viz = TfidfVectorizer(max_features=5000)
+        X_t_vec = tfidf_viz.fit_transform(X_t)
+        X_v_vec = tfidf_viz.transform(X_v)
         
-        # Initialize MLP
-        mlp = MLPClassifier(
+        # Initialize MLP for Visualization
+        mlp_viz = MLPClassifier(
             hidden_layer_sizes=(64,),
             learning_rate_init=0.0002,
             alpha=0.0001,
             random_state=RANDOM_STATE,
-            verbose=False, # We will print our own progress
+            verbose=False,
             max_iter=1000,
             solver="adam",
             activation="relu"
-
         )
         
         classes = np.unique(y_train)
@@ -108,11 +107,11 @@ def main():
         from sklearn.metrics import log_loss
         
         for i in range(30):
-            mlp.partial_fit(X_t_vec, y_t, classes=classes)
+            mlp_viz.partial_fit(X_t_vec, y_t, classes=classes)
             
             # Calculate losses
-            y_t_prob = mlp.predict_proba(X_t_vec)
-            y_v_prob = mlp.predict_proba(X_v_vec)
+            y_t_prob = mlp_viz.predict_proba(X_t_vec)
+            y_v_prob = mlp_viz.predict_proba(X_v_vec)
             
             tl = log_loss(y_t, y_t_prob)
             vl = log_loss(y_v, y_v_prob)
@@ -123,35 +122,53 @@ def main():
             if i % 5 == 0:
                 print(f"Iteration {i+1}/30 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
             
-        # Attach custom loss history to the model
-        mlp.custom_train_loss_ = train_losses
-        mlp.custom_val_loss_ = val_losses
+        # --- 2b. Final Best Model (Full Training) ---
+        print("\nTraining Final Best Model on full training set...")
         
-        # Reconstruct pipeline for compatibility
-        pipeline_best = Pipeline([
-            ('tfidf', tfidf),
-            ('clf', mlp)
+        # Initialize Final MLP with Best Parameters
+        mlp_final = MLPClassifier(
+            hidden_layer_sizes=(64,),
+            alpha=0.0001,
+            learning_rate_init=0.001, # Standard default or specific best? User didn't specify LR for final, assuming default or previous best.
+                                      # User specified: max_iter=1000, random_state, activation='relu', solver='adam', early_stopping=True, hidden_layer_sizes=(64,), alpha=0.0001
+            max_iter=1000,
+            random_state=RANDOM_STATE,
+            activation='relu',
+            solver='adam',
+            early_stopping=True,
+            verbose=True
+        )
+        
+        # Attach custom loss history from visualization model to final model for plotting
+        mlp_final.custom_train_loss_ = train_losses
+        mlp_final.custom_val_loss_ = val_losses
+        
+        pipeline_final = Pipeline([
+            ('tfidf', TfidfVectorizer(max_features=5000)),
+            ('clf', mlp_final)
         ])
         
-        # Evaluate on original test set
-        y_pred_best = pipeline_best.predict(X_test)
+        pipeline_final.fit(X_train, y_train)
+        
+        # Evaluate Final Model
+        y_pred_best = pipeline_final.predict(X_test)
         accuracy_best = accuracy_score(y_test, y_pred_best)
         report_best = classification_report(y_test, y_pred_best)
         
-        print(f"Best Model Test Accuracy: {accuracy_best:.4f}")
+        print(f"Final Best Model Test Accuracy: {accuracy_best:.4f}")
         print("Classification Report:\n", report_best)
         
-        # mlflow.log_param("model_type", "MLP_Best")
-        # mlflow.log_param("hidden_layer_sizes", "(64,)")
-        # mlflow.log_param("alpha", 0.0001)
-        # mlflow.log_metric("test_accuracy", accuracy_best)
+        mlflow.log_param("model_type", "MLP_Best_Final")
+        mlflow.log_param("hidden_layer_sizes", "(64,)")
+        mlflow.log_param("alpha", 0.0001)
+        mlflow.log_metric("test_accuracy", accuracy_best)
         
-        # mlflow.sklearn.log_model(pipeline_best, "model_best")
+        mlflow.sklearn.log_model(pipeline_final, "model_best")
         
         # Save locally
         os.makedirs("models", exist_ok=True)
-        joblib.dump(pipeline_best, "models/mlp_best.joblib")
-        print("Best model saved to models/mlp_best.joblib")
+        joblib.dump(pipeline_final, "models/mlp_best.joblib")
+        print("Final Best model saved to models/mlp_best.joblib")
 
 if __name__ == "__main__":
     

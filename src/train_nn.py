@@ -109,7 +109,7 @@ def main():
         
         from sklearn.metrics import log_loss
         
-        for i in range(12):
+        for i in range(100):
             mlp.partial_fit(X_t_vec, y_t, classes=classes)
             
             # Calculate losses
@@ -122,7 +122,7 @@ def main():
             train_losses.append(tl)
             val_losses.append(vl)
             
-            print(f"Iteration {i+1}/12 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
+            print(f"Iteration {i+1}/100 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
             
         # Attach custom loss history to the model
         mlp.custom_train_loss_ = train_losses

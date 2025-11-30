@@ -129,8 +129,6 @@ def main():
         mlp_final = MLPClassifier(
             hidden_layer_sizes=(64,),
             alpha=0.0001,
-            learning_rate_init=0.001, # Standard default or specific best? User didn't specify LR for final, assuming default or previous best.
-                                      # User specified: max_iter=1000, random_state, activation='relu', solver='adam', early_stopping=True, hidden_layer_sizes=(64,), alpha=0.0001
             max_iter=1000,
             random_state=RANDOM_STATE,
             activation='relu',

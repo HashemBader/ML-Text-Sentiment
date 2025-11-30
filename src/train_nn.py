@@ -69,15 +69,13 @@ def main():
         print(f"Basic Model Test Accuracy: {accuracy:.4f}")
         print("Classification Report:\n", report)
         
-        mlflow.log_param("model_type", "MLP_Basic")
-        mlflow.log_metric("test_accuracy", accuracy)
-        mlflow.sklearn.log_model(pipeline_basic, "model_basic")
+        # mlflow.log_param("model_type", "MLP_Basic")
+        # mlflow.log_metric("test_accuracy", accuracy)
+        # mlflow.sklearn.log_model(pipeline_basic, "model_basic")
 
     # 2. Train Best Model (MLP)
     print("\n--- 2. Training Best Model (MLP) ---")
     with mlflow.start_run(run_name="MLP_Best"):
-        # Best parameters found from notebook/experiments
-        # hidden_layer_sizes=(64,), alpha=0.0001
         
         # Custom training loop to capture validation loss
         print("Training model with custom loop for 30 iterations...")
@@ -122,7 +120,8 @@ def main():
             train_losses.append(tl)
             val_losses.append(vl)
             
-            print(f"Iteration {i+1}/30 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
+            if i % 5 == 0:
+                print(f"Iteration {i+1}/30 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
             
         # Attach custom loss history to the model
         mlp.custom_train_loss_ = train_losses
@@ -142,12 +141,12 @@ def main():
         print(f"Best Model Test Accuracy: {accuracy_best:.4f}")
         print("Classification Report:\n", report_best)
         
-        mlflow.log_param("model_type", "MLP_Best")
-        mlflow.log_param("hidden_layer_sizes", "(64,)")
-        mlflow.log_param("alpha", 0.0001)
-        mlflow.log_metric("test_accuracy", accuracy_best)
+        # mlflow.log_param("model_type", "MLP_Best")
+        # mlflow.log_param("hidden_layer_sizes", "(64,)")
+        # mlflow.log_param("alpha", 0.0001)
+        # mlflow.log_metric("test_accuracy", accuracy_best)
         
-        mlflow.sklearn.log_model(pipeline_best, "model_best")
+        # mlflow.sklearn.log_model(pipeline_best, "model_best")
         
         # Save locally
         os.makedirs("models", exist_ok=True)

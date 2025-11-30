@@ -16,30 +16,9 @@ import joblib
 DATA_PATH = os.path.join("data", "imdb_dataset_cleaned.csv")
 RANDOM_STATE = 42
 
-def clean_text(text):
-    # Lowercase the text
-    text = text.lower()
-    # Remove HTML tags
-    text = re.sub(r'<.*?>', '', text)
-    # Remove punctuation
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    # Remove extra whitespace
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
-
 def load_data(path):
     if not os.path.exists(path):
-        # Fallback to raw data if cleaned doesn't exist, and clean it
-        raw_path = os.path.join("data", "imdb_dataset.csv")
-        if os.path.exists(raw_path):
-            print(f"Cleaned data not found. Loading and cleaning from {raw_path}...")
-            df = pd.read_csv(raw_path)
-            df = df.drop_duplicates()
-            df['review'] = df['review'].apply(clean_text)
-            return df
-        else:
-            raise FileNotFoundError(f"Data file not found at {path} or {raw_path}.")
-    
+        raise FileNotFoundError(f"Data file not found at {path}. Please run 'python3 src/data.py' first to generate cleaned data.")
     return pd.read_csv(path)
 
 def main():

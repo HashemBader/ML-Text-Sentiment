@@ -44,8 +44,8 @@ def main():
         X, y, test_size=0.3, random_state=RANDOM_STATE, stratify=y
     )
 
-    # 1. Basic Model Run
-    print("\n--- 1. Running Basic Model ---")
+    # 1. Model Run
+    print("\n--- 1. Running Model ---")
     with mlflow.start_run(run_name="MLP_Basic"):
         pipeline_basic = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=5000)),
@@ -74,7 +74,7 @@ def main():
         # mlflow.sklearn.log_model(pipeline_basic, "model_basic")
 
     # 2. Train Best Model (MLP)
-    print("\n--- 2. Training Best Model (MLP) ---")
+    print("\n--- 2. Training Model (MLP) and saving cv loss ---")
     with mlflow.start_run(run_name="MLP_Best"):
         
         # Custom training loop to capture validation loss

@@ -88,6 +88,7 @@ def main():
                 max_iter=1000,
                 random_state=RANDOM_STATE,
                 early_stopping=True,
+                n_iter_no_change=40,
                 verbose=True
             ))
         ])

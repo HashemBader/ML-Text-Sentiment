@@ -122,32 +122,22 @@ def main():
             if i % 5 == 0:
                 print(f"Iteration {i+1}/30 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
             
-        # --- 2b. Final Best Model (Full Training) ---
-        print("\nTraining Final Best Model on full training set...")
+        # --- 2b. Final Best Model (Load Existing) ---
+        print("\nLoading existing Best Model from models/model.pkl...")
         
-        # Initialize Final MLP with Best Parameters
-        mlp_final = MLPClassifier(
-            hidden_layer_sizes=(64,),
-            alpha=0.0001,
-            max_iter=1000,
-            random_state=RANDOM_STATE,
-            activation='relu',
-            solver='adam',
-            early_stopping=True,
+        if os.path.exists("models/model.pkl"):
+            pipeline_final = joblib.load("models/model.pkl")
+        else:
+            raise FileNotFoundError("models/model.pkl not found. Please ensure the model exists.")
             
-            verbose=True
-        )
-        
         # Attach custom loss history from visualization model to final model for plotting
-        mlp_final.custom_train_loss_ = train_losses
-        mlp_final.custom_val_loss_ = val_losses
-        
-        pipeline_final = Pipeline([
-            ('tfidf', TfidfVectorizer(max_features=5000)),
-            ('clf', mlp_final)
-        ])
-        
-        pipeline_final.fit(X_train, y_train)
+        # The pipeline might wrap the classifier, so we need to access the step
+        if 'clf' in pipeline_final.named_steps:
+            mlp_final = pipeline_final.named_steps['clf']
+            mlp_final.custom_train_loss_ = train_losses
+            mlp_final.custom_val_loss_ = val_losses
+        else:
+            print("Warning: 'clf' step not found in loaded pipeline. Cannot attach loss history.")
         
         # Evaluate Final Model
         y_pred_best = pipeline_final.predict(X_test)
@@ -158,13 +148,11 @@ def main():
         print("Classification Report:\n", report_best)
         
         mlflow.log_param("model_type", "MLP_Best_Final")
-        mlflow.log_param("hidden_layer_sizes", "(64,)")
-        mlflow.log_param("alpha", 0.0001)
         mlflow.log_metric("test_accuracy", accuracy_best)
         
         mlflow.sklearn.log_model(pipeline_final, "model_best")
         
-        # Save locally
+        # Save locally as joblib for evaluate.py compatibility
         os.makedirs("models", exist_ok=True)
         joblib.dump(pipeline_final, "models/mlp_best.joblib")
         print("Final Best model saved to models/mlp_best.joblib")

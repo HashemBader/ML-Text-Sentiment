@@ -35,35 +35,47 @@ def plot_learning_curve(mlp_pipeline, out_path):
     """Plots the loss curve from the MLP classifier."""
     mlp_model = mlp_pipeline.named_steps['clf']
     
-    if not hasattr(mlp_model, 'loss_curve_'):
-        print("Warning: MLP model does not have loss_curve_ attribute. Skipping learning curve plot.")
+    plt.figure(figsize=(8, 6))
+    
+    # Check for custom loss history first (from train_nn.py custom loop)
+    if hasattr(mlp_model, 'custom_train_loss_'):
+        plt.plot(mlp_model.custom_train_loss_, label='Training Loss', color='tab:blue')
+        if hasattr(mlp_model, 'custom_val_loss_'):
+            plt.plot(mlp_model.custom_val_loss_, label='Validation Loss', color='tab:orange')
+        plt.ylabel("Log Loss")
+        plt.xlabel("Iterations")
+        plt.title("Neural Network Learning Curve")
+        plt.legend()
+        plt.grid(True)
+        
+    # Fallback to standard sklearn attributes
+    elif hasattr(mlp_model, 'loss_curve_'):
+        fig, ax1 = plt.subplots(figsize=(8, 6))
+        color = 'tab:blue'
+        ax1.set_xlabel('Iterations')
+        ax1.set_ylabel('Training Loss', color=color)
+        ax1.plot(mlp_model.loss_curve_, color=color, label='Training Loss')
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.grid(True)
+
+        if hasattr(mlp_model, 'validation_scores_') and mlp_model.validation_scores_ is not None:
+            ax2 = ax1.twinx()
+            color = 'tab:orange'
+            ax2.set_ylabel('Validation Accuracy', color=color)
+            ax2.plot(mlp_model.validation_scores_, color=color, label='Validation Accuracy')
+            ax2.tick_params(axis='y', labelcolor=color)
+            
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='center right')
+        else:
+            ax1.legend(loc='upper right')
+        plt.title("Neural Network Learning Curve")
+        
+    else:
+        print("Warning: MLP model does not have loss history. Skipping learning curve plot.")
         return
 
-    fig, ax1 = plt.subplots(figsize=(8, 6))
-
-    color = 'tab:blue'
-    ax1.set_xlabel('Iterations')
-    ax1.set_ylabel('Training Loss', color=color)
-    ax1.plot(mlp_model.loss_curve_, color=color, label='Training Loss')
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax1.grid(True)
-
-    if hasattr(mlp_model, 'validation_scores_') and mlp_model.validation_scores_ is not None:
-        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-        color = 'tab:orange'
-        ax2.set_ylabel('Validation Accuracy', color=color)  # we already handled the x-label with ax1
-        ax2.plot(mlp_model.validation_scores_, color=color, label='Validation Accuracy')
-        ax2.tick_params(axis='y', labelcolor=color)
-        
-        # Combine legends
-        lines1, labels1 = ax1.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(lines1 + lines2, labels1 + labels2, loc='center right')
-    else:
-        ax1.legend(loc='upper right')
-        print("Warning: MLP model does not have validation_scores_. Ensure early_stopping=True.")
-
-    plt.title("Neural Network Learning Curve")
     plt.tight_layout()
     plt.savefig(out_path)
     plt.close()

@@ -79,23 +79,58 @@ def main():
         # Best parameters found from notebook/experiments
         # hidden_layer_sizes=(64,), alpha=0.0001
         
+        # Custom training loop to capture validation loss
+        print("Training model with custom loop for 40 iterations...")
+        
+        # Split X_train into train and validation for loss monitoring
+        X_t, X_v, y_t, y_v = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_STATE, stratify=y_train)
+        
+        # Fit vectorizer on training part
+        tfidf = TfidfVectorizer(max_features=5000)
+        X_t_vec = tfidf.fit_transform(X_t)
+        X_v_vec = tfidf.transform(X_v)
+        
+        # Initialize MLP
+        mlp = MLPClassifier(
+            hidden_layer_sizes=(64,),
+            learning_rate_init=0.001,
+            alpha=0.0001,
+            random_state=RANDOM_STATE,
+            verbose=False # We will print our own progress
+        )
+        
+        classes = np.unique(y_train)
+        train_losses = []
+        val_losses = []
+        
+        from sklearn.metrics import log_loss
+        
+        for i in range(40):
+            mlp.partial_fit(X_t_vec, y_t, classes=classes)
+            
+            # Calculate losses
+            y_t_prob = mlp.predict_proba(X_t_vec)
+            y_v_prob = mlp.predict_proba(X_v_vec)
+            
+            tl = log_loss(y_t, y_t_prob)
+            vl = log_loss(y_v, y_v_prob)
+            
+            train_losses.append(tl)
+            val_losses.append(vl)
+            
+            print(f"Iteration {i+1}/40 - Train Loss: {tl:.4f}, Val Loss: {vl:.4f}")
+            
+        # Attach custom loss history to the model
+        mlp.custom_train_loss_ = train_losses
+        mlp.custom_val_loss_ = val_losses
+        
+        # Reconstruct pipeline for compatibility
         pipeline_best = Pipeline([
-            ('tfidf', TfidfVectorizer(max_features=5000)),
-            ('clf', MLPClassifier(
-                hidden_layer_sizes=(64,),
-                learning_rate_init=0.001,
-                alpha=0.0001,
-                max_iter=1000,
-                random_state=RANDOM_STATE,
-                early_stopping=True,
-                n_iter_no_change=40,
-                verbose=True
-            ))
+            ('tfidf', tfidf),
+            ('clf', mlp)
         ])
         
-        print("Training model...")
-        pipeline_best.fit(X_train, y_train)
-        
+        # Evaluate on original test set
         y_pred_best = pipeline_best.predict(X_test)
         accuracy_best = accuracy_score(y_test, y_pred_best)
         report_best = classification_report(y_test, y_pred_best)

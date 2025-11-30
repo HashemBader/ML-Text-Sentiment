@@ -62,7 +62,7 @@ models/
 *.pt
 *.ckpt
 *.joblib
-*.pkl
+
 
 # System files
 Thumbs.db

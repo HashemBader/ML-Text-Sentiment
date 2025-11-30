@@ -134,6 +134,7 @@ def main():
             activation='relu',
             solver='adam',
             early_stopping=True,
+            
             verbose=True
         )
         
